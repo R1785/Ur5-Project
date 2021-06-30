@@ -1,0 +1,29 @@
+<launch>
+  <!-- Launch Task-3 Simulation Environment in Gazebo -->
+    <include file="$(find pkg_vb_sim)/launch/task3_simulation.launch" />
+<!-- Run RViz with Moveit! Plugin -->
+    <arg name="use_rviz" default="true" />
+
+    <include file="$(find pkg_moveit_ur5_1)/launch/moveit_rviz.launch" if="$(arg use_rviz)">
+        <arg name="rviz_config" value="$(find pkg_moveit_ur5_1)/launch/moveit.rviz"/>
+    </include>
+
+<!-- Launch Moveit move_group Node -->
+    <include file = "$(find pkg_moveit_ur5_1)/launch/move_group.launch" />
+<!-- Add Shelf to Moveit! Planning Scene in RViz -->
+    <arg name="scene_file" default="$(find pkg_task3)/config/rviz/deformed1.scene"/>
+    <node name = "moveit_publish_scene_from_text" pkg= "moveit_ros_planning" type = "moveit_publish_scene_from_text" args= "$(arg scene_file)"/>
+<!-- This node is used to detect boxes with the help of ogical camera -->
+    <node name= "node_t3_logical_camera" pkg= "pkg_task3" type="node_t3_logical_camera.py" output="screen"/>
+<!-- this node is used to run the main task which is picking the box and placing them in bins -->
+    <node name= "node_t3_mainfile" pkg= "pkg_task3" type="node_t3_mainfile.py" output="screen"/>
+    <!-- Recording Bag File for Submission -->
+    <arg name="record" default="false"/>
+    <arg name="rec_name" default="t3.bag"/>
+
+    <group if="$(arg record)">
+        <node name="rosbag_record_pick" pkg="rosbag" type="record"
+       args="record -O $(find pkg_task3)/bag_files/$(arg rec_name) --chunksize=10 /eyrc/vb/ur5_1/vacuum_gripper/logical_camera/ur5_1" output="screen"/>
+ </group>
+
+</launch>
